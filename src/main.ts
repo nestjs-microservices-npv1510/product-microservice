@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 
-import envs from './config';
+import * as config from './config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
@@ -13,21 +13,20 @@ async function bootstrap() {
     {
       transport: Transport.TCP,
       options: {
-        port: 1510,
+        port: config.envs.port || 3001,
       },
     },
   );
 
-  // app.setGlobalPrefix('api');
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //   }),
+  // );
 
   await app.listen();
+  logger.log(`Product Miscroservice is running on port ${config.envs.port}...`);
   // await app.listen(envs.port || 9999, () => {
   //   logger.log(`Server is running on port ${envs.port}`);
   // });

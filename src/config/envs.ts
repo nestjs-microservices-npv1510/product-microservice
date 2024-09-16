@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 config();
 
 interface EnvVars {
-  PORT: string;
+  PORT: number;
   DATABASE_URL: string;
 }
 
