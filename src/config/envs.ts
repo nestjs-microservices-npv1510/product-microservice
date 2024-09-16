@@ -1,6 +1,5 @@
 import * as joi from 'joi';
 import { config } from 'dotenv';
-import { isString } from 'class-validator';
 config();
 
 interface EnvVars {
