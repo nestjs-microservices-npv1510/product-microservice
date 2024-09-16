@@ -3,6 +3,7 @@ import {
   OnModuleInit,
   NotFoundException,
   Logger,
+  HttpStatus,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -10,6 +11,7 @@ import { Product } from './entities/product.entity';
 
 import { PrismaClient } from '@prisma/client';
 import { PaginationDTO } from 'src/common/dto/pagination.dto';
+import { Payload, RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit {
@@ -21,13 +23,8 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     this.logger.log('Database connection established');
   }
 
-  create(createProductDto: CreateProductDto) {
-    const { name, price, description } = createProductDto;
-    // const newProduct = new Product(name, price, description);
-
-    // this.products.push(newProduct);
-    // return newProduct;
-
+  create(@Payload() createProductDto: CreateProductDto) {
+    // console.log(createProductDto);
     return this.product.create({
       data: createProductDto,
     });
@@ -59,7 +56,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     });
 
     if (!product)
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: `Product with id #${id} not found`,
+      });
 
     return product;
   }

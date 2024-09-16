@@ -4,7 +4,7 @@ interface IProduct {
   id?: string;
   name: string;
   price: number;
-  available?: boolean;
+  // available?: boolean;
   description?: string;
 }
 
@@ -13,7 +13,7 @@ export class Product implements IProduct {
   public name: string;
   public price: number;
   public available: boolean;
-  public description: string;
+  // public description: string;
 
   constructor(name, price, available, description) {
     this.id = uuidV4();
@@ -21,6 +21,6 @@ export class Product implements IProduct {
     this.name = name;
     this.price = price;
     this.available = available || false;
-    this.description = description || '';
+    // this.description = description || '';
   }
 }
