@@ -5,15 +5,27 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import * as config from './config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
+console.log(config.envs.natsServers);
+
 async function bootstrap() {
   const logger = new Logger('Main');
   // const app = await NestFactory.create(AppModule);
+  // const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+  //   AppModule,
+  //   {
+  //     transport: Transport.TCP,
+  //     options: {
+  //       port: config.envs.port || 3001,
+  //     },
+  //   },
+  // );
+
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
-      transport: Transport.TCP,
+      transport: Transport.NATS,
       options: {
-        port: config.envs.port || 3001,
+        servers: ['nats://localhost:4222'],
       },
     },
   );

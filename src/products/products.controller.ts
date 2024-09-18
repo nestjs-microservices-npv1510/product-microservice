@@ -26,6 +26,7 @@ export class ProductsController {
   // }
   @MessagePattern({ cmd: 'create_product' })
   create(@Payload() createProductDto: CreateProductDto) {
+    // console.log(createProductDto);
     return this.productsService.create(createProductDto);
   }
 

@@ -12,6 +12,8 @@ import { Product } from './entities/product.entity';
 import { PrismaClient } from '@prisma/client';
 import { PaginationDTO } from 'src/common/dto/pagination.dto';
 import { Payload, RpcException } from '@nestjs/microservices';
+import { isInstance } from 'class-validator';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit {
@@ -23,11 +25,25 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     this.logger.log('Database connection established');
   }
 
-  create(@Payload() createProductDto: CreateProductDto) {
-    // console.log(createProductDto);
-    return this.product.create({
-      data: createProductDto,
-    });
+  async create(createProductDto: CreateProductDto) {
+    try {
+      return await this.product.create({
+        data: createProductDto,
+      });
+    } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError) {
+        if (err.message.includes('Unique'))
+          throw new RpcException({
+            status: HttpStatus.CONFLICT,
+            message: 'Product name already exists',
+          });
+      }
+
+      throw new RpcException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'An error occurred while creating the product',
+      });
+    }
   }
 
   async findAll(paginationDto: PaginationDTO) {
