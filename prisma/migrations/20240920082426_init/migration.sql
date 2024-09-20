@@ -1,8 +1,14 @@
+/*
+  Warnings:
+
+  - You are about to drop the column `test` on the `Product` table. All the data in the column will be lost.
+
+*/
 -- RedefineTables
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
 CREATE TABLE "new_Product" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "price" REAL NOT NULL,
     "available" BOOLEAN NOT NULL DEFAULT true,
