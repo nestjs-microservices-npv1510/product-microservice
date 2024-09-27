@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Logger,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -23,6 +24,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
   onModuleInit() {
     this.$connect();
     this.logger.log('Database connection established');
+  }
+
+  async testThrowExceptionFromService(status: number, message: string) {
+    throw new RpcException({ status: +status, message });
   }
 
   async create(createProductDto: CreateProductDto) {
@@ -47,8 +52,6 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
   }
 
   async findAll(paginationDto: PaginationDTO) {
-    // return this.products;
-
     const { page = 1, limit = 3 } = paginationDto;
     const totalItems = await this.product.count();
 
@@ -91,8 +94,6 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
 
   async remove(id: number) {
     await this.findOne(id);
-
-    // await this.product.delete({ where: { id: id } });
 
     return await this.product.update({
       where: { id: id },
