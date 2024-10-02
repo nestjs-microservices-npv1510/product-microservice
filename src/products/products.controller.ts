@@ -12,9 +12,10 @@ export class ProductsController {
 
   @MessagePattern('product.create')
   async create(@Payload() createProductDto: CreateProductDto) {
+    // console.log('products controller create');
+
     const { metadata, ...data } = createProductDto;
     const product = await this.productsService.create(data);
-
     return {
       status: 'success',
       product,
