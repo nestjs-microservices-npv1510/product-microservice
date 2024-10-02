@@ -1,7 +1,9 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
+import MessagePayloadDto from './message-payload.dto';
 
-export class PaginationDTO {
+export class PaginationDto extends PartialType(MessagePayloadDto) {
   @IsOptional()
   @IsNumber()
   @Min(1)

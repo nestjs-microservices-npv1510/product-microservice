@@ -11,7 +11,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 
 import { PrismaClient } from '@prisma/client';
-import { PaginationDTO } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Payload, RpcException } from '@nestjs/microservices';
 import { isInstance } from 'class-validator';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -26,57 +26,66 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     this.logger.log('Database connection established');
   }
 
-  async testThrowExceptionFromService(status: number, message: string) {
-    throw new RpcException({ status: +status, message });
-  }
-
   async create(createProductDto: CreateProductDto) {
     try {
       return await this.product.create({
         data: createProductDto,
       });
     } catch (err) {
+      // Lỗi từ db
+
       if (err instanceof PrismaClientKnownRequestError) {
-        if (err.message.includes('Unique'))
-          throw new RpcException({
-            status: HttpStatus.CONFLICT,
-            message: 'Product name already exists',
-          });
       }
 
-      throw new RpcException({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'An error occurred while creating the product',
-      });
+      // }
+      // console.log('ERROR FROM TRY CATCH');
+      // console.log(err);
+      // console.log(err.name);
+      // console.log(err.message);
+      throw new RpcException(err);
     }
   }
 
-  async findAll(paginationDto: PaginationDTO) {
+  async findAll(paginationDto: PaginationDto) {
     const { page = 1, limit = 3 } = paginationDto;
+
+    const products = await this.product.findMany({
+      where: { available: true },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
     const totalItems = await this.product.count();
+    const totalPages = Math.ceil(totalItems / limit);
+
+    if (page > totalPages)
+      throw new RpcException({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'Page is not valid',
+
+        // others data
+        page,
+        totalPages,
+      });
 
     return {
-      data: await this.product.findMany({
-        where: { available: true },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
+      data: products,
       metaData: {
-        page: page,
-        totalPages: Math.ceil(totalItems / limit),
+        page,
+        totalPages,
         totalItems,
       },
     };
   }
 
-  async findOne(id: number) {
+  async findProductById(id: number) {
     const product = await this.product.findFirst({
       where: { id: id, available: true },
     });
 
     if (!product)
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: `Product with id #${id} not found`,
       });
 
@@ -84,33 +93,34 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
-    await this.findOne(id);
+    await this.findProductById(id);
 
     return await this.product.update({
-      where: { id: id },
+      where: { id },
       data: updateProductDto,
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
-
+  async delete(id: number) {
+    await this.findProductById(id);
     return await this.product.update({
       where: { id: id },
       data: { available: false },
     });
   }
 
-  async validateProducts(productIds: number[]) {
+  async validateOrderProducts(productIds: number[]) {
     const validProducts = await this.product.findMany({
       where: {
         id: { in: productIds },
+        available: true,
       },
     });
 
     if (productIds.length !== validProducts.length)
       throw new RpcException({
-        status: HttpStatus.BAD_REQUEST,
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+
         message: 'Some products is not valid !',
       });
 

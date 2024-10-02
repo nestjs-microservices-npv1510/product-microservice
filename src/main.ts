@@ -5,22 +5,12 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import * as config from './config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
-console.log(config.envs.natsServers);
+// console.log(config.envs.natsServers);
 
 async function bootstrap() {
   const logger = new Logger('Main');
-  // const app = await NestFactory.create(AppModule);
-  // const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-  //   AppModule,
-  //   {
-  //     transport: Transport.TCP,
-  //     options: {
-  //       port: config.envs.port || 3001,
-  //     },
-  //   },
-  // );
 
-  console.log(config.envs.natsServers);
+  // console.log(config.envs.natsServers);
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
@@ -39,9 +29,6 @@ async function bootstrap() {
   // );
 
   await app.listen();
-  logger.log(`Product Miscroservice is running on port ${config.envs.port}...`);
-  // await app.listen(envs.port || 9999, () => {
-  //   logger.log(`Server is running on port ${envs.port}`);
-  // });
+  logger.log(`Product Miscroservice is running...`);
 }
 bootstrap();
