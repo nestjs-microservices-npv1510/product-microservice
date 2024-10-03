@@ -1,11 +1,17 @@
+// NestJs
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
-
-import * as config from './config';
+import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
-// console.log(config.envs.natsServers);
+// modukes
+import { AppModule } from './app.module';
+
+// interceptors
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { CatchAsyncInterceptor } from './common/interceptors/catchAsync.interceptor';
+
+// envs
+import * as config from './config';
 
 async function bootstrap() {
   const logger = new Logger('Main');
@@ -20,6 +26,13 @@ async function bootstrap() {
       },
     },
   );
+
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new CatchAsyncInterceptor(),
+  );
+
+  // app.useGlobalFilters(new PrismaClientExceptionFilter());
 
   // app.useGlobalPipes(
   //   new ValidationPipe({

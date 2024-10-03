@@ -1,19 +1,12 @@
-import {
-  Injectable,
-  OnModuleInit,
-  NotFoundException,
-  Logger,
-  HttpStatus,
-  HttpException,
-} from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { Injectable, OnModuleInit, Logger, HttpStatus } from '@nestjs/common';
+import { CreateProductDto } from './dtos/create-product.dto';
+import { UpdateProductDto } from './dtos/update-product.dto';
 import { Product } from './entities/product.entity';
 
 import { PrismaClient } from '@prisma/client';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { Payload, RpcException } from '@nestjs/microservices';
-import { isInstance } from 'class-validator';
+import { RpcException } from '@nestjs/microservices';
+
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -27,26 +20,13 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
   }
 
   async create(createProductDto: CreateProductDto) {
-    try {
-      return await this.product.create({
-        data: createProductDto,
-      });
-    } catch (err) {
-      // Lỗi từ db
-
-      if (err instanceof PrismaClientKnownRequestError) {
-      }
-
-      // }
-      // console.log('ERROR FROM TRY CATCH');
-      // console.log(err);
-      // console.log(err.name);
-      // console.log(err.message);
-      throw new RpcException(err);
-    }
+    console.log('products service create');
+    return await this.product.create({
+      data: createProductDto,
+    });
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findMany(paginationDto: PaginationDto) {
     const { page = 1, limit = 3 } = paginationDto;
 
     const products = await this.product.findMany({
@@ -59,14 +39,14 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     const totalPages = Math.ceil(totalItems / limit);
 
     if (page > totalPages)
-      throw new RpcException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Page is not valid',
+      throw {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Page exceeds total pages',
 
         // others data
         page,
         totalPages,
-      });
+      };
 
     return {
       data: products,
@@ -84,10 +64,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     });
 
     if (!product)
-      throw new RpcException({
+      throw {
         statusCode: HttpStatus.NOT_FOUND,
         message: `Product with id #${id} not found`,
-      });
+      };
 
     return product;
   }
@@ -118,11 +98,10 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
     });
 
     if (productIds.length !== validProducts.length)
-      throw new RpcException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-
+      throw {
+        statusCode: HttpStatus.BAD_REQUEST,
         message: 'Some products is not valid !',
-      });
+      };
 
     return validProducts;
   }

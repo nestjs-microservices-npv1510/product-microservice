@@ -1,18 +1,21 @@
-import { Controller, ParseIntPipe } from '@nestjs/common';
+import { Controller, Logger, ParseIntPipe } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductDto } from './dtos/create-product.dto';
+import { UpdateProductDto } from './dtos/update-product.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { ValidateOrderProductsDto } from './dto/validate-order-products.dto';
+import { ValidateOrderProductsDto } from './dtos/validate-order-products.dto';
+// import { CatchAsyncErrors } from './decorators/catchAsync.decorator';
 
 @Controller('products')
 export class ProductsController {
+  private readonly logger = new Logger('ProductsController');
   constructor(private readonly productsService: ProductsService) {}
 
   @MessagePattern('product.create')
+  // @CatchAsyncErrors()
   async create(@Payload() createProductDto: CreateProductDto) {
-    // console.log('products controller create');
+    console.log('products controller create');
 
     const { metadata, ...data } = createProductDto;
     const product = await this.productsService.create(data);
@@ -25,7 +28,7 @@ export class ProductsController {
   @MessagePattern('products.findMany')
   async findMany(@Payload() paginationDto: PaginationDto) {
     const { data: products, metaData } =
-      await this.productsService.findAll(paginationDto);
+      await this.productsService.findMany(paginationDto);
 
     return {
       status: 'success',
@@ -46,7 +49,7 @@ export class ProductsController {
   @MessagePattern('products.update')
   async update(@Payload() updateProductDto: UpdateProductDto) {
     // return updateProductDto;
-
+    console.log('products ms controller update');
     const { id, metadata, ...data } = updateProductDto;
     const product = await this.productsService.update(+id, data);
     return {
@@ -56,18 +59,24 @@ export class ProductsController {
   }
 
   @MessagePattern('products.delete')
-  remove(@Payload('id', ParseIntPipe) id: number) {
+  async delete(@Payload('id', ParseIntPipe) id: number) {
     return this.productsService.delete(id);
   }
 
   @MessagePattern('products.validate-order-products')
-  validateOrderProducts(
+  // @CatchAsyncErrors()
+  async validateOrderProducts(
     @Payload() validateOrderProductsDto: ValidateOrderProductsDto,
   ) {
     // console.log('validateOrderProducts');
     // console.log(validateOrderProductsDto);
     // return validateOrderProductsDto;
     const { metadata, productIds } = validateOrderProductsDto;
-    return this.productsService.validateOrderProducts(productIds);
+    return {
+      status: 'success',
+      products: await this.productsService.validateOrderProducts(productIds),
+    };
+
+    // return this.productsService.validateOrderProducts(productIds);
   }
 }
